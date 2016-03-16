@@ -8,6 +8,13 @@ var tableClass = function(selector){
     data.fClasses = [];
     data.tClasses = [];
 
+    /*
+     Приватные методы
+     */
+
+    /*
+    Функция реализует получение данных посредством ajax запроса
+     */
     function getData(){
         $.ajax({
             url: "../json/data.json",
@@ -19,6 +26,9 @@ var tableClass = function(selector){
         });
     }
 
+    /*
+     Функция создает новый объект, с необходимыми данными
+     */
     function getCols(res){
         var obj = {};
 
@@ -43,6 +53,9 @@ var tableClass = function(selector){
         createRows(obj);
     }
 
+    /*
+     Функция создает массив, по которому будет строиться таблица
+     */
     function createRows(res){
         var result = [],
             col = 1,
@@ -78,8 +91,10 @@ var tableClass = function(selector){
         showTable(result);
     }
 
+    /*
+     Функция реализует построение итоговой таблицы с данными
+     */
     function showTable(res){
-        console.log(res);
         var html = '';
 
         for (var i = 0; i < res.length; i++) {
@@ -95,12 +110,20 @@ var tableClass = function(selector){
         data.table.append(html);
     }
 
+    /*
+     Функция необходима для очистки параметров фильтров при их изменении
+     */
     function clearFIlter(){
         data.fields = [];
         data.types = [];
+        data.fClasses = fieldClasses || [];
+        data.tClasses = typeClasses || [];
     }
 
     return {
+        /*
+         Публичные методы
+         */
         init: function(fields, types, fieldClasses, typeClasses){
             data.elem = $(selector).eq(0);
             data.table = $("<table></table>");
@@ -110,18 +133,6 @@ var tableClass = function(selector){
             data.fClasses = fieldClasses || [];
             data.tClasses = typeClasses || [];
             getData();
-        },
-        showFields: function(fields){
-            clearFIlter();
-            data.table.html('');
-            data.fields = fields || [];
-            getCols(data.json);
-        },
-        showTypes: function(types){
-            clearFIlter();
-            data.table.html('');
-            data.types = types || [];
-            getCols(data.json);
         },
         showFilterBy: function(fields, types, fieldClasses, typeClasses){
             clearFIlter();
