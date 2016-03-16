@@ -4,6 +4,9 @@
 var tableClass = function(selector){
     var data = {};
     data.fields = [];
+    data.types = [];
+    data.fClasses = [];
+    data.tClasses = [];
 
     function getData(){
         $.ajax({
@@ -11,18 +14,25 @@ var tableClass = function(selector){
             dataType: "json",
             success: function(res){
                 data.json = res;
-                getByField(res);
+                getCols(res);
             }
         });
     }
 
-    function getByField(res){
+    function getCols(res){
         var obj = {};
 
-        if(typeof data.fields !== 'undefined'){
+        if(data.fields.length || data.types.length){
             for (var key in res) {
-                if(data.fields.indexOf(key) > -1){
-                    obj[key] = res[key];
+                if(data.fields.indexOf(key) > -1 || data.fields.length == 0) {
+                    for (var name in res[key]) {
+                        if (!obj[key]) {
+                            obj[key] = {};
+                        }
+                        if(data.types.indexOf(name) > -1  || data.types.length == 0) {
+                            obj[key][name] = res[key][name];
+                        }
+                    }
                 }
             }
         } else {
@@ -30,27 +40,35 @@ var tableClass = function(selector){
                 obj[key] = res[key];
             }
         }
-
         createRows(obj);
-
     }
 
     function createRows(res){
         var result = [],
             col = 1,
-            row = 1;
+            row = 1,
+            name = '';
 
-        result[0] = [''];
+        result[0] = [{"value":"", "prefix":''}];
         for (var key in res) {
-            result[0].push(key);
+            result[0].push({"value":key, "prefix":''});
             for (var obj in res[key]) {
+                name = '';
                 if(typeof result[row] === "undefined"){
                     result[row] = [];
                 }
                 if(col == 1){
-                    result[row][0] = obj;
+                    result[row][0] = {"value":obj};
                 }
-                result[row][col] = res[key][obj];
+
+                if(data.fClasses[key]){
+                    name += " " + data.fClasses[key];
+                }
+                if(data.tClasses[obj]){
+                    name += " " + data.tClasses[obj];
+                }
+
+                result[row][col] = {"value":res[key][obj], "prefix":name};
                 row++;
             }
             row = 1;
@@ -70,25 +88,51 @@ var tableClass = function(selector){
             for (var j = 0; j < row.length; j++) {
                 var item = row[j];
 
-                html += "<td>" + item + "</td>";
+                html += "<td class='" + item.prefix + "'>" + item.value + "</td>";
             }
             html += "</tr>";
         }
         data.table.append(html);
     }
 
+    function clearFIlter(){
+        data.fields = [];
+        data.types = [];
+    }
+
     return {
-        init: function(fields){
+        init: function(fields, types, fieldClasses, typeClasses){
             data.elem = $(selector).eq(0);
             data.table = $("<table></table>");
             data.elem.append(data.table);
-            data.fields = fields;
+            data.fields = fields || [];
+            data.types = types || [];
+            data.fClasses = fieldClasses || [];
+            data.tClasses = typeClasses || [];
             getData();
         },
         showFields: function(fields){
+            clearFIlter();
             data.table.html('');
-            data.fields = fields;
-            getByField(data.json);
+            data.fields = fields || [];
+            getCols(data.json);
+        },
+        showTypes: function(types){
+            clearFIlter();
+            data.table.html('');
+            data.types = types || [];
+            getCols(data.json);
+        },
+        showFilterBy: function(fields, types, fieldClasses, typeClasses){
+            clearFIlter();
+            data.table.html('');
+            data.fields = fields || [];
+            data.types = types || [];
+            data.fClasses = fieldClasses || [];
+            data.tClasses = typeClasses || [];
+            data.fClasses = fieldClasses || [];
+            data.tClasses = typeClasses || [];
+            getCols(data.json);
         }
     }
 };
@@ -97,5 +141,5 @@ var tabler = "";
 
 $(function(){
     tabler = new tableClass("#table");
-    tabler.init();
+    tabler.init(["category1", "category2", "category3"],["type1", "type2", "type3", "type4"],{"category2":"class1"},{"type3":"class4"});
 });
